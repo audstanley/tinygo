@@ -213,27 +213,27 @@ func (p Pin) Configure(config PinConfig) {
 	switch config.Mode {
 	case PinOutput:
 		gpio.PDDR.SetBits(1 << pos)
-		pcr.Set(nxp.PORT_PCR0_MUX(1) | nxp.PORT_PCR0_SRE | nxp.PORT_PCR0_DSE)
+		pcr.Set((1 << nxp.PORT_PCR0_MUX_Pos) | nxp.PORT_PCR0_SRE | nxp.PORT_PCR0_DSE)
 
 	case PinOutputOpenDrain:
 		gpio.PDDR.SetBits(1 << pos)
-		pcr.Set(nxp.PORT_PCR0_MUX(1) | nxp.PORT_PCR0_SRE | nxp.PORT_PCR0_DSE | nxp.PORT_PCR0_ODE)
+		pcr.Set((1 << nxp.PORT_PCR0_MUX_Pos) | nxp.PORT_PCR0_SRE | nxp.PORT_PCR0_DSE | nxp.PORT_PCR0_ODE)
 
 	case PinInput:
 		gpio.PDDR.ClearBits(1 << pos)
-		pcr.Set(nxp.PORT_PCR0_MUX(1))
+		pcr.Set((1 << nxp.PORT_PCR0_MUX_Pos))
 
 	case PinInputPullUp:
 		gpio.PDDR.ClearBits(1 << pos)
-		pcr.Set(nxp.PORT_PCR0_MUX(1) | nxp.PORT_PCR0_PE | nxp.PORT_PCR0_PS)
+		pcr.Set((1 << nxp.PORT_PCR0_MUX_Pos) | nxp.PORT_PCR0_PE | nxp.PORT_PCR0_PS)
 
 	case PinInputPullDown:
 		gpio.PDDR.ClearBits(1 << pos)
-		pcr.Set(nxp.PORT_PCR0_MUX(1) | nxp.PORT_PCR0_PE)
+		pcr.Set((1 << nxp.PORT_PCR0_MUX_Pos) | nxp.PORT_PCR0_PE)
 
 	case PinDisable:
 		gpio.PDDR.ClearBits(1 << pos)
-		pcr.Set(nxp.PORT_PCR0_MUX(0))
+		pcr.Set((0 << nxp.PORT_PCR0_MUX_Pos))
 	}
 }
 

@@ -48,9 +48,9 @@ const (
 )
 
 var (
-	_SIM_SOPT2_IRC48SEL = nxp.SIM_SOPT2_PLLFLLSEL(3)
-	_SMC_PMCTRL_HSRUN   = nxp.SMC_PMCTRL_RUNM(3)
-	_SMC_PMSTAT_HSRUN   = nxp.SMC_PMSTAT_PMSTAT(0x80)
+	_SIM_SOPT2_IRC48SEL = uint32(3 << nxp.SIM_SOPT2_PLLFLLSEL_Pos)
+	_SMC_PMCTRL_HSRUN   = uint8(3 << nxp.SMC_PMCTRL_RUNM_Pos)
+	_SMC_PMSTAT_HSRUN   = uint8(0x80 << nxp.SMC_PMSTAT_PMSTAT_Pos)
 )
 
 //go:export Reset_Handler
@@ -107,9 +107,9 @@ func initSystem() {
 	// enable capacitors for crystal
 	nxp.OSC.CR.Set(nxp.OSC_CR_SC8P | nxp.OSC_CR_SC2P | nxp.OSC_CR_ERCLKEN)
 	// enable osc, 8-32 MHz range, low power mode
-	nxp.MCG.C2.Set(uint8(nxp.MCG_C2_RANGE(2) | nxp.MCG_C2_EREFS))
+	nxp.MCG.C2.Set(uint8((2 << nxp.MCG_C2_RANGE_Pos) | nxp.MCG_C2_EREFS))
 	// switch to crystal as clock source, FLL input = 16 MHz / 512
-	nxp.MCG.C1.Set(uint8(nxp.MCG_C1_CLKS(2) | nxp.MCG_C1_FRDIV(4)))
+	nxp.MCG.C1.Set(uint8((2 << nxp.MCG_C1_CLKS_Pos) | (4 << nxp.MCG_C1_FRDIV_Pos)))
 	// wait for crystal oscillator to begin
 	for !nxp.MCG.S.HasBits(nxp.MCG_S_OSCINIT0) {
 	}
@@ -117,7 +117,7 @@ func initSystem() {
 	for nxp.MCG.S.HasBits(nxp.MCG_S_IREFST) {
 	}
 	// wait for MCGOUT to use oscillator
-	for (nxp.MCG.S.Get() & nxp.MCG_S_CLKST_Msk) != nxp.MCG_S_CLKST(2) {
+	for (nxp.MCG.S.Get() & nxp.MCG_S_CLKST_Msk) != (2 << nxp.MCG_S_CLKST_Pos) {
 	}
 
 	// now in FBE mode
@@ -130,8 +130,8 @@ func initSystem() {
 	nxp.SMC.PMCTRL.Set(_SMC_PMCTRL_HSRUN) // enter HSRUN mode
 	for nxp.SMC.PMSTAT.Get() != _SMC_PMSTAT_HSRUN {
 	} // wait for HSRUN
-	nxp.MCG.C5.Set(nxp.MCG_C5_PRDIV(1))
-	nxp.MCG.C6.Set(nxp.MCG_C6_PLLS | nxp.MCG_C6_VDIV(29))
+	nxp.MCG.C5.Set((1 << nxp.MCG_C5_PRDIV_Pos))
+	nxp.MCG.C6.Set(nxp.MCG_C6_PLLS | (29 << nxp.MCG_C6_VDIV_Pos))
 
 	// wait for PLL to start using xtal as its input
 	for !nxp.MCG.S.HasBits(nxp.MCG_S_PLLST) {
@@ -143,18 +143,18 @@ func initSystem() {
 
 	// now program the clock dividers
 	// config divisors: 180 MHz core, 60 MHz bus, 25.7 MHz flash, USB = IRC48M
-	nxp.SIM.CLKDIV1.Set(nxp.SIM_CLKDIV1_OUTDIV1(0) | nxp.SIM_CLKDIV1_OUTDIV2(2) | nxp.SIM_CLKDIV1_OUTDIV4(6))
-	nxp.SIM.CLKDIV2.Set(nxp.SIM_CLKDIV2_USBDIV(0))
+	nxp.SIM.CLKDIV1.Set((0 << nxp.SIM_CLKDIV1_OUTDIV1_Pos) | (2 << nxp.SIM_CLKDIV1_OUTDIV2_Pos) | (6 << nxp.SIM_CLKDIV1_OUTDIV4_Pos))
+	nxp.SIM.CLKDIV2.Set((0 << nxp.SIM_CLKDIV2_USBDIV_Pos))
 
 	// switch to PLL as clock source, FLL input = 16 MHz / 512
-	nxp.MCG.C1.Set(nxp.MCG_C1_CLKS(0) | nxp.MCG_C1_FRDIV(4))
+	nxp.MCG.C1.Set((0 << nxp.MCG_C1_CLKS_Pos) | (4 << nxp.MCG_C1_FRDIV_Pos))
 	// wait for PLL clock to be used
-	for (nxp.MCG.S.Get() & nxp.MCG_S_CLKST_Msk) != nxp.MCG_S_CLKST(3) {
+	for (nxp.MCG.S.Get() & nxp.MCG_S_CLKST_Msk) != (3 << nxp.MCG_S_CLKST_Pos) {
 	}
 	// now we're in PEE mode
 	// trace is CPU clock, CLKOUT=OSCERCLK0
 	// USB uses IRC48
-	nxp.SIM.SOPT2.Set(nxp.SIM_SOPT2_USBSRC | _SIM_SOPT2_IRC48SEL | nxp.SIM_SOPT2_TRACECLKSEL | nxp.SIM_SOPT2_CLKOUTSEL(6))
+	nxp.SIM.SOPT2.Set(nxp.SIM_SOPT2_USBSRC | _SIM_SOPT2_IRC48SEL | nxp.SIM_SOPT2_TRACECLKSEL | (6 << nxp.SIM_SOPT2_CLKOUTSEL_Pos))
 
 	// If the RTC oscillator isn't enabled, get it started.  For Teensy 3.6
 	// we don't do this early.  See comment above about slow rising power.
@@ -167,7 +167,7 @@ func initSystem() {
 	nxp.SysTick.RVR.Set(cyclesPerMilli - 1)
 	nxp.SysTick.CVR.Set(0)
 	nxp.SysTick.CSR.Set(nxp.SysTick_CSR_CLKSOURCE | nxp.SysTick_CSR_TICKINT | nxp.SysTick_CSR_ENABLE)
-	nxp.SystemControl.SHPR3.Set(nxp.SystemControl_SHPR3_PRI_15(32) | nxp.SystemControl_SHPR3_PRI_14(32)) // set systick and pendsv priority to 32
+	nxp.SystemControl.SHPR3.Set((32 << nxp.SystemControl_SHPR3_PRI_15_Pos) | (32 << nxp.SystemControl_SHPR3_PRI_14_Pos)) // set systick and pendsv priority to 32
 }
 
 func initInternal() {
@@ -198,32 +198,32 @@ func initInternal() {
 	nxp.FTM3.C6SC.Set(0x28)
 	nxp.FTM3.C7SC.Set(0x28)
 
-	nxp.FTM0.SC.Set(nxp.FTM_SC_CLKS(1) | nxp.FTM_SC_PS(_DEFAULT_FTM_PRESCALE))
+	nxp.FTM0.SC.Set((1 << nxp.FTM_SC_CLKS_Pos) | (_DEFAULT_FTM_PRESCALE << nxp.FTM_SC_PS_Pos))
 	nxp.FTM1.CNT.Set(0)
 	nxp.FTM1.MOD.Set(_DEFAULT_FTM_MOD)
 	nxp.FTM1.C0SC.Set(0x28)
 	nxp.FTM1.C1SC.Set(0x28)
-	nxp.FTM1.SC.Set(nxp.FTM_SC_CLKS(1) | nxp.FTM_SC_PS(_DEFAULT_FTM_PRESCALE))
+	nxp.FTM1.SC.Set((1 << nxp.FTM_SC_CLKS_Pos) | (_DEFAULT_FTM_PRESCALE << nxp.FTM_SC_PS_Pos))
 
 	// nxp.FTM2.CNT.Set(0)
 	// nxp.FTM2.MOD.Set(_DEFAULT_FTM_MOD)
 	// nxp.FTM2.C0SC.Set(0x28)
 	// nxp.FTM2.C1SC.Set(0x28)
-	// nxp.FTM2.SC.Set(nxp.FTM_SC_CLKS(1) | nxp.FTM_SC_PS(_DEFAULT_FTM_PRESCALE))
+	// nxp.FTM2.SC.Set((1 << nxp.FTM_SC_CLKS_Pos) | (_DEFAULT_FTM_PRESCALE << nxp.FTM_SC_PS_Pos))
 
 	nxp.FTM3.CNT.Set(0)
 	nxp.FTM3.MOD.Set(_DEFAULT_FTM_MOD)
 	nxp.FTM3.C0SC.Set(0x28)
 	nxp.FTM3.C1SC.Set(0x28)
-	nxp.FTM3.SC.Set(nxp.FTM_SC_CLKS(1) | nxp.FTM_SC_PS(_DEFAULT_FTM_PRESCALE))
+	nxp.FTM3.SC.Set((1 << nxp.FTM_SC_CLKS_Pos) | (_DEFAULT_FTM_PRESCALE << nxp.FTM_SC_PS_Pos))
 
 	nxp.SIM.SCGC2.SetBits(nxp.SIM_SCGC2_TPM1)
-	nxp.SIM.SOPT2.SetBits(nxp.SIM_SOPT2_TPMSRC(2))
+	nxp.SIM.SOPT2.SetBits((2 << nxp.SIM_SOPT2_TPMSRC_Pos))
 	nxp.TPM1.CNT.Set(0)
 	nxp.TPM1.MOD.Set(32767)
 	nxp.TPM1.C0SC.Set(0x28)
 	nxp.TPM1.C1SC.Set(0x28)
-	nxp.TPM1.SC.Set(nxp.FTM_SC_CLKS(1) | nxp.FTM_SC_PS(0))
+	nxp.TPM1.SC.Set((1 << nxp.FTM_SC_CLKS_Pos) | (0 << nxp.FTM_SC_PS_Pos))
 
 	// configure the low-power timer
 	nxp.SIM.SCGC5.SetBits(nxp.SIM_SCGC5_LPTMR)
@@ -332,7 +332,7 @@ func sleepTicks(duration timeUnit) {
 		return
 	}
 
-	nxp.LPTMR0.PSR.Set(nxp.LPTMR0_PSR_PCS(3) | nxp.LPTMR0_PSR_PBYP) // use 16MHz clock, undivided
+	nxp.LPTMR0.PSR.Set((3 << nxp.LPTMR0_PSR_PCS_Pos) | nxp.LPTMR0_PSR_PBYP) // use 16MHz clock, undivided
 
 	for now < end {
 		count := uint32(end-now) / cyclesPerMicro

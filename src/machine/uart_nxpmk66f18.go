@@ -106,8 +106,8 @@ func (u UART) Configure(config UARTConfig) {
 		u.SCGC.Set(u.SCGCMask)
 
 		// configure pins
-		u.DefaultRX.Control().Set(nxp.PORT_PCR0_PE | nxp.PORT_PCR0_PS | nxp.PORT_PCR0_PFE | nxp.PORT_PCR0_MUX(3))
-		u.DefaultTX.Control().Set(nxp.PORT_PCR0_DSE | nxp.PORT_PCR0_SRE | nxp.PORT_PCR0_MUX(3))
+		u.DefaultRX.Control().Set(nxp.PORT_PCR0_PE | nxp.PORT_PCR0_PS | nxp.PORT_PCR0_PFE | (3 << nxp.PORT_PCR0_MUX_Pos))
+		u.DefaultTX.Control().Set(nxp.PORT_PCR0_DSE | nxp.PORT_PCR0_SRE | (3 << nxp.PORT_PCR0_MUX_Pos))
 		u.C1.Set(nxp.UART_C1_ILT)
 	}
 
