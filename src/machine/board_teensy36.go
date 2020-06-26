@@ -11,6 +11,9 @@ func ClockFrequency() uint32 { return 16000000 }
 // LED on the Teensy
 const LED = PC05
 
+// Port E is unavailable pending resolution of
+// https://github.com/tinygo-org/tinygo/issues/1190
+
 // digital IO
 const (
 	D00 = PB16
@@ -37,7 +40,7 @@ const (
 	D21 = PD06
 	D22 = PC01
 	D23 = PC02
-	D24 = PE26
+	// D24 = PE26
 	D25 = PA05
 	D26 = PA14
 	D27 = PA15
@@ -46,8 +49,8 @@ const (
 	D30 = PB19
 	D31 = PB10
 	D32 = PB11
-	D33 = PE24
-	D34 = PE25
+	// D33 = PE24
+	// D34 = PE25
 	D35 = PC08
 	D36 = PC09
 	D37 = PC10
@@ -69,14 +72,14 @@ const (
 	D53 = PD12
 	D54 = PD15
 	D55 = PD11
-	D56 = PE10
-	D57 = PE11
-	D58 = PE00
-	D59 = PE01
-	D60 = PE02
-	D61 = PE03
-	D62 = PE04
-	D63 = PE05
+	// D56 = PE10
+	// D57 = PE11
+	// D58 = PE00
+	// D59 = PE01
+	// D60 = PE02
+	// D61 = PE03
+	// D62 = PE04
+	// D63 = PE05
 )
 
 var (
@@ -96,6 +99,9 @@ const (
 	defaultUART2TX = D08
 	defaultUART3RX = D31
 	defaultUART3TX = D32
-	defaultUART4RX = D34
-	defaultUART4TX = D33
+
+	// Port E is unavailable
+	defaultUART4RX = NoPin // D34
+	defaultUART4TX = NoPin // D33
 )
+

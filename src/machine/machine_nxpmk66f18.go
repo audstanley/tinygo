@@ -150,6 +150,9 @@ const (
 	PD15
 )
 
+/*
+// Port E is unavailable pending resolution of
+// https://github.com/tinygo-org/tinygo/issues/1190
 const (
 	PE00 Pin = iota + 128
 	PE01
@@ -180,7 +183,7 @@ const (
 	PE26
 	PE27
 	PE28
-)
+)*/
 
 //go:inline
 func (p Pin) reg() (*nxp.GPIO_Type, *volatile.Register32, uint8) {
@@ -193,12 +196,11 @@ func (p Pin) reg() (*nxp.GPIO_Type, *volatile.Register32, uint8) {
 		gpio, pcr = nxp.GPIOB, nxp.PORTB
 	} else if p < 96 {
 		gpio, pcr = nxp.GPIOC, nxp.PORTC
-	} else if p < 128 {
-		gpio, pcr = nxp.GPIOD, nxp.PORTD
-	} else if p < 160 {
-		gpio, pcr = nxp.GPIOE, nxp.PORTE
 	} else {
-		panic("invalid pin number")
+		// } else if p < 128 {
+		gpio, pcr = nxp.GPIOD, nxp.PORTD
+		// } else if p < 160 {
+		// 	gpio, pcr = nxp.GPIOE, nxp.PORTE
 	}
 
 	return gpio, &(*[32]volatile.Register32)(unsafe.Pointer(pcr))[p%32], uint8(p % 32)
