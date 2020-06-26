@@ -349,3 +349,40 @@ func sleepTicks(duration timeUnit) {
 		now = ticks()
 	}
 }
+
+func abort() {
+	println("!!! ABORT !!!")
+
+	m := arm.DisableInterrupts()
+	arm.Asm("mov r12, #1")
+	arm.Asm("msr basepri, r12")                                           // only execute interrupts of priority 0
+	nxp.SystemControl.SHPR3.ClearBits(nxp.SystemControl_SHPR3_PRI_15_Msk) // set systick to priority 0
+	arm.EnableInterrupts(m)
+
+	machine.LED.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	for {
+		start := systickCount.Get()
+
+		machine.LED.Set(true)
+		for systickCount.Get()-start < 60 {
+			arm.Asm("wfi")
+		}
+
+		machine.LED.Set(false)
+		for systickCount.Get()-start < 120 {
+			arm.Asm("wfi")
+		}
+	}
+
+	// teensy core services ISRs in this loop:
+
+	// 	for {
+	// 		// keep polling some communication while in fault
+	// 		// mode, so we don't completely die.
+	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_USBOTG) usb_isr();
+	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_UART0) uart0_status_isr();
+	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_UART1) uart1_status_isr();
+	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_UART2) uart2_status_isr();
+	// 	}
+}
