@@ -62,13 +62,35 @@ var (
 //go:linkname gosched runtime.Gosched
 func gosched()
 
+// PutcharUART writes a byte to the UART synchronously, without using interrupts
+// or calling the scheduler
+func PutcharUART(u UART, c byte) {
+	// ensure the UART has been configured
+	if !u.SCGC.HasBits(u.SCGCMask) {
+		u.configure(UARTConfig{}, false)
+	}
+
+	for u.TCFIFO.Get() > 0 {
+		// busy wait
+	}
+	u.D.Set(c)
+	u.C2.Set(uartC2TXActive)
+}
+
+// PollUART manually checks a UART status and calls the ISR. This should only be
+// called by runtime.abort.
+func PollUART(u UART) {
+	if u.SCGC.HasBits(u.SCGCMask) {
+		u.handleStatusInterrupt(u.Interrupt)
+	}
+}
+
 type UART = *UARTData
 
 type UARTData struct {
 	*nxp.UART_Type
-	SCGC      *volatile.Register32
-	SCGCMask  uint32
-	IRQNumber uint32
+	SCGC     *volatile.Register32
+	SCGCMask uint32
 
 	DefaultRX Pin
 	DefaultTX Pin
@@ -81,11 +103,11 @@ type UARTData struct {
 	Interrupt    interrupt.Interrupt
 }
 
-var UART0 = UARTData{UART_Type: nxp.UART0, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART0, IRQNumber: nxp.IRQ_UART0_RX_TX, DefaultRX: defaultUART0RX, DefaultTX: defaultUART0TX}
-var UART1 = UARTData{UART_Type: nxp.UART1, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART1, IRQNumber: nxp.IRQ_UART1_RX_TX, DefaultRX: defaultUART1RX, DefaultTX: defaultUART1TX}
-var UART2 = UARTData{UART_Type: nxp.UART2, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART2, IRQNumber: nxp.IRQ_UART2_RX_TX, DefaultRX: defaultUART2RX, DefaultTX: defaultUART2TX}
-var UART3 = UARTData{UART_Type: nxp.UART3, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART3, IRQNumber: nxp.IRQ_UART3_RX_TX, DefaultRX: defaultUART3RX, DefaultTX: defaultUART3TX}
-var UART4 = UARTData{UART_Type: nxp.UART4, SCGC: &nxp.SIM.SCGC1, SCGCMask: nxp.SIM_SCGC1_UART4, IRQNumber: nxp.IRQ_UART4_RX_TX, DefaultRX: defaultUART4RX, DefaultTX: defaultUART4TX}
+var UART0 = UARTData{UART_Type: nxp.UART0, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART0, DefaultRX: defaultUART0RX, DefaultTX: defaultUART0TX}
+var UART1 = UARTData{UART_Type: nxp.UART1, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART1, DefaultRX: defaultUART1RX, DefaultTX: defaultUART1TX}
+var UART2 = UARTData{UART_Type: nxp.UART2, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART2, DefaultRX: defaultUART2RX, DefaultTX: defaultUART2TX}
+var UART3 = UARTData{UART_Type: nxp.UART3, SCGC: &nxp.SIM.SCGC4, SCGCMask: nxp.SIM_SCGC4_UART3, DefaultRX: defaultUART3RX, DefaultTX: defaultUART3TX}
+var UART4 = UARTData{UART_Type: nxp.UART4, SCGC: &nxp.SIM.SCGC1, SCGCMask: nxp.SIM_SCGC1_UART4, DefaultRX: defaultUART4RX, DefaultTX: defaultUART4TX}
 
 func init() {
 	UART0.Interrupt = interrupt.New(nxp.IRQ_UART0_RX_TX, UART0.handleStatusInterrupt)
@@ -97,6 +119,10 @@ func init() {
 
 // Configure the UART.
 func (u UART) Configure(config UARTConfig) {
+	u.configure(config, true)
+}
+
+func (u UART) configure(config UARTConfig, canSched bool) {
 	// from: serial_begin
 
 	if !u.Configured {
@@ -124,8 +150,12 @@ func (u UART) Configure(config UARTConfig) {
 
 	if u.Configured {
 		// don't change baud rate mid transmit
-		for u.Transmitting.Get() != 0 {
-			// busy wait flush, for compatibility with putchar
+		if canSched {
+			u.Flush()
+		} else {
+			for u.Transmitting.Get() != 0 {
+				// busy wait flush
+			}
 		}
 	}
 

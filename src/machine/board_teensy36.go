@@ -104,4 +104,3 @@ const (
 	defaultUART4RX = NoPin // D34
 	defaultUART4TX = NoPin // D33
 )
-

@@ -284,3 +284,17 @@ func (p FastPin) Clear()       { p.PCOR.Set(true) }
 func (p FastPin) Toggle()      { p.PTOR.Set(true) }
 func (p FastPin) Write(v bool) { p.PDOR.Set(v) }
 func (p FastPin) Read() bool   { return p.PDIR.Get() }
+
+// SysTick is configured in runtime_nxpmk66f18.go
+
+// number of systick irqs (milliseconds) since boot
+var systickCount volatile.Register32
+
+//go:export SysTick_Handler
+func tick() {
+	systickCount.Set(systickCount.Get() + 1)
+}
+
+func MillisSinceBoot() uint32 {
+	return systickCount.Get()
+}
