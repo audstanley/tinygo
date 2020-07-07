@@ -61,8 +61,8 @@ func init() {
 // SPI pins
 const (
 	SPI0_SCK_PIN  = D3
-	SPI0_MOSI_PIN = D4
-	SPI0_MISO_PIN = D2
+	SPI0_COPI_PIN = D4
+	SPI0_CIPO_PIN = D2
 )
 
 // SPI on the Trinket M0.

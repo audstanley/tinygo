@@ -28,8 +28,8 @@ const (
 
 	// for SPI
 	PinModeSPICLK  PinMode = 8
-	PinModeSPIMOSI PinMode = 9
-	PinModeSPIMISO PinMode = 10
+	PinModeSPICOPI PinMode = 9
+	PinModeSPICIPO PinMode = 10
 
 	// for analog/ADC
 	PinInputAnalog PinMode = 11
@@ -102,12 +102,12 @@ func (p Pin) ConfigureAltFunc(config PinConfig, altFunc stm32.AltFunc) {
 		port.OSPEEDR.ReplaceBits(stm32.GPIOSpeedLow, 0x3, pos)
 		port.PUPDR.ReplaceBits(stm32.GPIOPUPDRFloating, 0x3, pos)
 		p.SetAltFunc(altFunc)
-	case PinModeSPIMOSI:
+	case PinModeSPICOPI:
 		port.MODER.ReplaceBits(stm32.GPIOModeOutputAltFunc, 0x3, pos)
 		port.OSPEEDR.ReplaceBits(stm32.GPIOSpeedLow, 0x3, pos)
 		port.PUPDR.ReplaceBits(stm32.GPIOPUPDRFloating, 0x3, pos)
 		p.SetAltFunc(altFunc)
-	case PinModeSPIMISO:
+	case PinModeSPICIPO:
 		port.MODER.ReplaceBits(stm32.GPIOModeOutputAltFunc, 0x3, pos)
 		port.OSPEEDR.ReplaceBits(stm32.GPIOSpeedLow, 0x3, pos)
 		port.PUPDR.ReplaceBits(stm32.GPIOPUPDRFloating, 0x3, pos)

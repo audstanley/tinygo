@@ -101,8 +101,8 @@ type SPI struct {
 type SPIConfig struct {
 	Frequency uint32
 	SCK       Pin
-	MOSI      Pin
-	MISO      Pin
+	COPI      Pin
+	CIPO      Pin
 	LSBFirst  bool
 	Mode      uint8
 }
@@ -110,16 +110,16 @@ type SPIConfig struct {
 // Configure is intended to setup the SPI interface.
 func (spi SPI) Configure(config SPIConfig) error {
 	// Use default pins if not set.
-	if config.SCK == 0 && config.MOSI == 0 && config.MISO == 0 {
+	if config.SCK == 0 && config.COPI == 0 && config.CIPO == 0 {
 		config.SCK = SPI0_SCK_PIN
-		config.MOSI = SPI0_MOSI_PIN
-		config.MISO = SPI0_MISO_PIN
+		config.COPI = SPI0_COPI_PIN
+		config.CIPO = SPI0_CIPO_PIN
 	}
 
 	// enable pins for SPI
 	config.SCK.Configure(PinConfig{Mode: PinSPI})
-	config.MOSI.Configure(PinConfig{Mode: PinSPI})
-	config.MISO.Configure(PinConfig{Mode: PinSPI})
+	config.COPI.Configure(PinConfig{Mode: PinSPI})
+	config.CIPO.Configure(PinConfig{Mode: PinSPI})
 
 	// set default frequency
 	if config.Frequency == 0 {

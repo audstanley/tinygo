@@ -73,8 +73,8 @@ const (
 // SPI pins (internal flash)
 const (
 	SPI0_SCK_PIN  = P0_19 // SCK
-	SPI0_MOSI_PIN = P0_21 // MOSI
-	SPI0_MISO_PIN = P0_23 // MISO
+	SPI0_COPI_PIN = P0_21 // COPI
+	SPI0_CIPO_PIN = P0_23 // CIPO
 )
 
 // USB CDC identifiers

@@ -78,7 +78,7 @@ const (
 
 	// 240x240 ST7789 display is connected to these pins (use RowOffset = 80)
 	TFT_SCK   = D29
-	TFT_MOSI  = D30
+	TFT_COPI  = D30
 	TFT_CS    = D31
 	TFT_DC    = D32
 	TFT_RESET = D33
@@ -117,8 +117,8 @@ const (
 // SPI pins
 const (
 	SPI0_SCK_PIN  = D13 // SCK
-	SPI0_MOSI_PIN = D15 // MOSI
-	SPI0_MISO_PIN = D14 // MISO
+	SPI0_COPI_PIN = D15 // COPI
+	SPI0_CIPO_PIN = D14 // CIPO
 )
 
 // USB CDC identifiers

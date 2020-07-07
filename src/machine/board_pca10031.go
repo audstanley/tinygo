@@ -34,6 +34,6 @@ const (
 // SPI pins (unused)
 const (
 	SPI0_SCK_PIN  = NoPin
-	SPI0_MOSI_PIN = NoPin
-	SPI0_MISO_PIN = NoPin
+	SPI0_COPI_PIN = NoPin
+	SPI0_CIPO_PIN = NoPin
 )

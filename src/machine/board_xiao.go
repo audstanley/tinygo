@@ -21,8 +21,8 @@ const (
 	D6  = PB08 // can be used for PWM or UART1 TX
 	D7  = PB09 // can be used for PWM or UART1 RX
 	D8  = PA07 // can be used for PWM or SPI SCK
-	D9  = PA05 // can be used for PWM or SPI MISO
-	D10 = PA06 // can be used for PWM or SPI MOSI
+	D9  = PA05 // can be used for PWM or SPI CIPO
+	D10 = PA06 // can be used for PWM or SPI COPI
 )
 
 // Analog pins
@@ -90,8 +90,8 @@ var (
 // SPI pins
 const (
 	SPI0_SCK_PIN  = PA07 // SCK: SERCOM0/PAD[3]
-	SPI0_MOSI_PIN = PA06 // MOSI: SERCOM0/PAD[2]
-	SPI0_MISO_PIN = PA05 // MISO: SERCOM0/PAD[1]
+	SPI0_COPI_PIN = PA06 // COPI: SERCOM0/PAD[2]
+	SPI0_CIPO_PIN = PA05 // CIPO: SERCOM0/PAD[1]
 )
 
 // SPI on the Xiao

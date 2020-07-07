@@ -47,8 +47,8 @@ const (
 // SPI pins
 const (
 	SPI0_SCK_PIN  Pin = 47 // P1.15
-	SPI0_MOSI_PIN Pin = 45 // P1.13
-	SPI0_MISO_PIN Pin = 46 // P1.14
+	SPI0_COPI_PIN Pin = 45 // P1.13
+	SPI0_CIPO_PIN Pin = 46 // P1.14
 )
 
 // USB CDC identifiers

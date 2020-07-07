@@ -10,8 +10,8 @@ const (
 	SCL_PIN       Pin = NoPin
 	SDA_PIN       Pin = NoPin
 	SPI0_SCK_PIN  Pin = 18
-	SPI0_MISO_PIN Pin = 19
-	SPI0_MOSI_PIN Pin = 20
+	SPI0_CIPO_PIN Pin = 19
+	SPI0_COPI_PIN Pin = 20
 )
 
 // LCD pins.
@@ -20,7 +20,7 @@ const (
 	OLED_RES     Pin = 14 // reset pin
 	OLED_DC      Pin = 13 // data/command
 	OLED_SCK     Pin = 12 // SPI clock
-	OLED_MOSI    Pin = 11 // SPI MOSI (master-out, slave-in)
+	OLED_COPI    Pin = 11 // SPI COPI (chip-out, peripheral-in)
 	OLED_LED_POW Pin = 16
 	OLED_IC_POW  Pin = 17
 )

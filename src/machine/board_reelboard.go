@@ -20,7 +20,7 @@ const (
 	EPD_DC_PIN       Pin = 16
 	EPD_CS_PIN       Pin = 17
 	EPD_SCK_PIN      Pin = 19
-	EPD_MOSI_PIN     Pin = 20
+	EPD_COPI_PIN     Pin = 20
 	POWER_SUPPLY_PIN Pin = 32
 )
 
@@ -44,8 +44,8 @@ const (
 // SPI pins
 const (
 	SPI0_SCK_PIN  Pin = 47
-	SPI0_MOSI_PIN Pin = 45
-	SPI0_MISO_PIN Pin = 46
+	SPI0_COPI_PIN Pin = 45
+	SPI0_CIPO_PIN Pin = 46
 )
 
 // PowerSupplyActive enables the supply voltages for nRF52840 and peripherals (true) or only for nRF52840 (false)

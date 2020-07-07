@@ -114,8 +114,8 @@ func init() {
 // SPI pins
 const (
 	SPI0_SCK_PIN  = PA5
-	SPI0_MISO_PIN = PA6
-	SPI0_MOSI_PIN = PA7
+	SPI0_CIPO_PIN = PA6
+	SPI0_COPI_PIN = PA7
 )
 
 // I2C pins
