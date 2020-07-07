@@ -36,7 +36,6 @@ import (
 	"device/nxp"
 	"machine"
 	"runtime/interrupt"
-	"runtime/volatile"
 )
 
 const (
@@ -47,10 +46,10 @@ const (
 	_DEFAULT_FTM_PRESCALE = 1
 )
 
-var (
-	_SIM_SOPT2_IRC48SEL = uint32(3 << nxp.SIM_SOPT2_PLLFLLSEL_Pos)
-	_SMC_PMCTRL_HSRUN   = uint8(3 << nxp.SMC_PMCTRL_RUNM_Pos)
-	_SMC_PMSTAT_HSRUN   = uint8(0x80 << nxp.SMC_PMSTAT_PMSTAT_Pos)
+const (
+	_SIM_SOPT2_IRC48SEL = 3 << nxp.SIM_SOPT2_PLLFLLSEL_Pos
+	_SMC_PMCTRL_HSRUN   = 3 << nxp.SMC_PMCTRL_RUNM_Pos
+	_SMC_PMSTAT_HSRUN   = 0x80 << nxp.SMC_PMSTAT_PMSTAT_Pos
 )
 
 //go:export Reset_Handler
@@ -143,7 +142,7 @@ func initSystem() {
 
 	// now program the clock dividers
 	// config divisors: 180 MHz core, 60 MHz bus, 25.7 MHz flash, USB = IRC48M
-	nxp.SIM.CLKDIV1.Set((0 << nxp.SIM_CLKDIV1_OUTDIV1_Pos) | (2 << nxp.SIM_CLKDIV1_OUTDIV2_Pos) | (6 << nxp.SIM_CLKDIV1_OUTDIV4_Pos))
+	nxp.SIM.CLKDIV1.Set((0 << nxp.SIM_CLKDIV1_OUTDIV1_Pos) | (2 << nxp.SIM_CLKDIV1_OUTDIV2_Pos) | (0 << nxp.SIM_CLKDIV1_OUTDIV1_Pos) | (6 << nxp.SIM_CLKDIV1_OUTDIV4_Pos))
 	nxp.SIM.CLKDIV2.Set((0 << nxp.SIM_CLKDIV2_USBDIV_Pos))
 
 	// switch to PLL as clock source, FLL input = 16 MHz / 512
@@ -205,6 +204,7 @@ func initInternal() {
 	nxp.FTM1.C1SC.Set(0x28)
 	nxp.FTM1.SC.Set((1 << nxp.FTM_SC_CLKS_Pos) | (_DEFAULT_FTM_PRESCALE << nxp.FTM_SC_PS_Pos))
 
+	// causes a data bus error for unknown reasons
 	// nxp.FTM2.CNT.Set(0)
 	// nxp.FTM2.MOD.Set(_DEFAULT_FTM_MOD)
 	// nxp.FTM2.C0SC.Set(0x28)
@@ -231,78 +231,40 @@ func initInternal() {
 	interrupt.New(nxp.IRQ_LPTMR0, wake).Enable()
 
 	// 	analog_init();
-
-	// #if !defined(TEENSY_INIT_USB_DELAY_BEFORE)
-	// 	#if TEENSYDUINO >= 142
-	// 		#define TEENSY_INIT_USB_DELAY_BEFORE 25
-	// 	#else
-	// 		#define TEENSY_INIT_USB_DELAY_BEFORE 50
-	// 	#endif
-	// #endif
-
-	// #if !defined(TEENSY_INIT_USB_DELAY_AFTER)
-	// 	#if TEENSYDUINO >= 142
-	// 		#define TEENSY_INIT_USB_DELAY_AFTER 275
-	// 	#else
-	// 		#define TEENSY_INIT_USB_DELAY_AFTER 350
-	// 	#endif
-	// #endif
-
-	// 	// for background about this startup delay, please see these conversations
-	// 	// https://forum.pjrc.com/threads/36606-startup-time-(400ms)?p=113980&viewfull=1#post113980
-	// 	// https://forum.pjrc.com/threads/31290-Teensey-3-2-Teensey-Loader-1-24-Issues?p=87273&viewfull=1#post87273
-
-	// 	delay(TEENSY_INIT_USB_DELAY_BEFORE);
-	// 	usb_init();
-	// 	delay(TEENSY_INIT_USB_DELAY_AFTER);
 }
 
 func postinit() {}
 
 func putchar(c byte) {
-	u := &machine.UART0
-
-	// ensure the UART has been configured
-	if !u.SCGC.HasBits(u.SCGCMask) {
-		u.Configure(machine.UARTConfig{})
-	}
-
-	for u.TCFIFO.Get() > 0 {
-		// busy wait
-	}
-	u.D.Set(c)
+	machine.PutcharUART(&machine.UART0, c)
 }
 
 // ???
 const asyncScheduler = false
 
-// convert from ticks (us) to time.Duration (ns)
-const tickMicros = 1000
-
-var cyclesPerMilli = machine.CPUFrequency() / 1000
-
 // cyclesPerMilli-1 is used for the systick reset value
 //   the systick current value will be decremented on every clock cycle
 //   an interrupt is generated when the current value reaches 0
 //   a value of freq/1000 generates a tick (irq) every millisecond (1/1000 s)
-
-// number of systick irqs (milliseconds) since boot
-var systickCount volatile.Register32
-
-//go:export SysTick_Handler
-func tick() {
-	systickCount.Set(systickCount.Get() + 1)
-}
+var cyclesPerMilli = machine.CPUFrequency() / 1000
 
 type timeUnit int64
 
+func ticksToNanoseconds(ticks timeUnit) int64 {
+	return int64(ticks) * 1000
+}
+
+func nanosecondsToTicks(ns int64) timeUnit {
+	return timeUnit(ns / 1000)
+}
+
 // ticks are in microseconds
 func ticks() timeUnit {
-	m := arm.DisableInterrupts()
+	mask := arm.DisableInterrupts()
 	current := nxp.SysTick.CVR.Get()        // current value of the systick counter
-	count := systickCount.Get()             // number of milliseconds since boot
+	count := machine.MillisSinceBoot()      // number of milliseconds since boot
 	istatus := nxp.SystemControl.ICSR.Get() // interrupt status register
-	arm.EnableInterrupts(m)
+	arm.EnableInterrupts(mask)
 
 	micros := count * 1000 // a tick (1ms) = 1000 us
 
@@ -361,28 +323,21 @@ func abort() {
 
 	machine.LED.Configure(machine.PinConfig{Mode: machine.PinOutput})
 
+	var v bool
 	for {
-		start := systickCount.Get()
+		machine.LED.Set(v)
+		v = !v
 
-		machine.LED.Set(true)
-		for systickCount.Get()-start < 60 {
+		t := machine.MillisSinceBoot()
+		for machine.MillisSinceBoot()-t < 60 {
 			arm.Asm("wfi")
 		}
 
-		machine.LED.Set(false)
-		for systickCount.Get()-start < 120 {
-			arm.Asm("wfi")
-		}
+		// keep polling some communication while in fault
+		// mode, so we don't completely die.
+		// machine.PollUSB(&machine.USB0)
+		machine.PollUART(&machine.UART0)
+		machine.PollUART(&machine.UART1)
+		machine.PollUART(&machine.UART2)
 	}
-
-	// teensy core services ISRs in this loop:
-
-	// 	for {
-	// 		// keep polling some communication while in fault
-	// 		// mode, so we don't completely die.
-	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_USBOTG) usb_isr();
-	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_UART0) uart0_status_isr();
-	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_UART1) uart1_status_isr();
-	// 		if nxp.SIM.SCGC4.HasBits(nxp.SIM_SCGC4_UART2) uart2_status_isr();
-	// 	}
 }
